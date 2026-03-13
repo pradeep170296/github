@@ -14,9 +14,16 @@ password:p.value
 })
 .then(r=>r.json())
 .then(d=>{
+
 if(d.status=="ok")
-location="controller.html";
+{
+    if(d.role=="admin")
+        location="admin.html";
+    else
+        location="controller.html";
+}
 else
 alert("Login fail");
+
 });
 }
