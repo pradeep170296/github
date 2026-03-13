@@ -7,39 +7,95 @@ const fs = require("fs");
 app.use(express.static("public"));
 app.use(express.json());
 
-const users = JSON.parse(fs.readFileSync("users.json"));
+function getUsers()
+{
+    return JSON.parse(
+        fs.readFileSync("users.json")
+    );
+}
+
+function saveUsers(data)
+{
+    fs.writeFileSync(
+        "users.json",
+        JSON.stringify(data, null, 2)
+    );
+}
+
+/* LOGIN */
 
 app.post("/login", (req, res) => {
 
-    const { username, password } = req.body;
+    const users = getUsers();
 
     const user = users.find(
-        u => u.username === username && u.password === password
+        u =>
+            u.username == req.body.username &&
+            u.password == req.body.password
     );
 
-    if (user)
-        res.json({ status: "ok" });
-    else
-        res.json({ status: "fail" });
+    if (!user)
+        return res.json({ status: "fail" });
+
+    res.json({
+        status: "ok",
+        role: user.role
+    });
 
 });
+
+
+/* GET USERS */
+
+app.get("/users", (req, res) => {
+
+    res.json(getUsers());
+
+});
+
+
+/* ADD USER */
+
+app.post("/addUser", (req, res) => {
+
+    let users = getUsers();
+
+    users.push(req.body);
+
+    saveUsers(users);
+
+    res.json({ status: "ok" });
+
+});
+
+
+/* DELETE USER */
+
+app.post("/deleteUser", (req, res) => {
+
+    let users = getUsers();
+
+    users =
+        users.filter(
+            u => u.username != req.body.username
+        );
+
+    saveUsers(users);
+
+    res.json({ status: "ok" });
+
+});
+
+
+/* SOCKET */
 
 io.on("connection", socket => {
 
-    socket.on("offer", data => {
-        socket.broadcast.emit("offer", data);
-    });
-
-    socket.on("answer", data => {
-        socket.broadcast.emit("answer", data);
-    });
-
-    socket.on("ice", data => {
-        socket.broadcast.emit("ice", data);
-    });
+    console.log("Connected");
 
 });
 
+
 http.listen(3000, () =>
-    console.log("Server running 3000")
+    console.log("Server running")
 );
